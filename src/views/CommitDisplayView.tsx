@@ -1,19 +1,68 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { TextInput, Button } from "react-native";
+import { COMMIT_COUNT, DEFAULT_REPO, DEFAULT_USER, getRepoCommits, getRepoData, HASH_LENGTH } from "../api/GithubAPI";
+import { GithubRepoData, GithubRepoCommitData, GithubRepoCommit } from "../api/Types";
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    display: 'flex',
     backgroundColor: "#fff",
+    // Center items.
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    // Padding on sides.
+    width: '60%',
+    height: '100%',
+    margin: 'auto',
   },
-  row: {
+  rowFull: {
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
+
+    marginBottom: 10,
+    flexGrow: 0,
+    minHeight: 24,
+  },
+  columnLeft: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "flex-start",
+
+    flexGrow: 1,
+    marginBottom: 10,
+    minHeight: 24,
+  },
+  rowCenter: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+
+    marginBottom: 10,
+    flexGrow: 0,
+    minHeight: 32,
+  },
+
+  rowCommit: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 10,
+    marginBottom: 10,
+    flexShrink: 0,
+    flexGrow: 1,
+  },
+  containerCommit: {
+    display: 'flex',
+    flexGrow: 1,
+    flexShrink: 0,
+  },
+  textField: {
+    border: "1px solid black",
+    borderRadius: 5,
+    marginLeft: 10,
+    backgroundColor: "#999",
   },
   rowEnd: {
     flex: 1,
@@ -24,44 +73,85 @@ const styles = StyleSheet.create({
 });
 
 const CommitDisplayView = function () {
-  const [inputUser, onChangeInputUser] = React.useState("");
-  const [inputRepo, onChangeInputRepo] = React.useState("");
+  const [inputUser, onChangeInputUser] = React.useState(DEFAULT_USER);
+  const [inputRepo, onChangeInputRepo] = React.useState(DEFAULT_REPO);
 
-  const [commitMessages, setCommitMessages] = React.useState<
-    Record<keyof any, String>
-  >({});
+  const [repoDesc, setRepoDesc] = React.useState('No repo selected');
 
-  const onClickFetch = function () {};
+  const [commitMessages, setCommitMessages] = React.useState<Record<
+    keyof any,
+    String
+  > | null>(null);
+
+  const onClickFetch = async function () {
+    const repoData: GithubRepoData = await getRepoData(inputUser, inputRepo);
+    const commitData: GithubRepoCommitData = await getRepoCommits(
+      inputUser,
+      inputRepo
+    );
+
+    const commitMessages: Record<keyof any, String> = {};
+    const commitCount = Math.min(COMMIT_COUNT, commitData.length);
+    for (var i = 0; i < commitCount; i++) {
+      var commit:GithubRepoCommit = commitData[i];
+      commitMessages[commit.sha.substring(0, HASH_LENGTH)] = commit.commit.message;
+    }
+
+    if (repoData.description != null) {
+      setRepoDesc(repoData.full_name + " : " + repoData.description);
+    } else {
+      setRepoDesc(repoData.full_name);
+    }
+
+    setCommitMessages(commitMessages);
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
+      <View style={styles.rowFull}>
         <Text>Github Commits</Text>
+
+      </View>
+      <View style={styles.rowFull}>
+        <Text>Username</Text>
         <TextInput
+          style={styles.textField}
           onChangeText={(text) => onChangeInputUser(text)}
           value={inputUser}
         />
+
       </View>
-      <View style={styles.row}>
-        <Text>Username</Text>
+      <View style={styles.rowFull}>
+        <Text>Repository</Text>
         <TextInput
+          style={styles.textField}
           onChangeText={(text) => onChangeInputRepo(text)}
           value={inputRepo}
         />
       </View>
-      <View style={styles.row}>
-        <Text>Repository</Text>
-        <TextInput />
-      </View>
-      <View style={styles.rowEnd}>
+      <View style={styles.rowCenter}>
         <Button title="Fetch" onPress={onClickFetch} />
       </View>
-      {Object.entries(commitMessages).map(([hash, message]) => (
-        <View style={styles.row}>
-          <Text>{hash}</Text>
-          <Text>{message}</Text>
+      {commitMessages == null ? null : (
+        <View style={styles.containerCommit}>
+          <View style={styles.rowCenter}>
+            <Text>{repoDesc}</Text>
+          </View>
+          <View style={styles.rowCenter}>
+            <Text>Commit Messages</Text>
+          </View>
+          {Object.entries(commitMessages).map(([hash, message]) => (
+            <View style={styles.columnLeft}>
+              <Text>{hash}</Text>
+              {
+                // Correctly display commit messages with multiple lines.
+                message.split("\n").filter((line) => line.length > 0)
+                  .map((line) => (<Text>{line}</Text>))
+              }
+            </View>
+          ))}
         </View>
-      ))}
+      )}
     </View>
   );
 };

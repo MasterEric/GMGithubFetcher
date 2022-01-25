@@ -8,9 +8,12 @@ export type GithubRepoCommit = {
   sha: string;
 
   commit: {
+    author: {
+      name: string;
+      email: string;
+      date: string;
+    },
     message: string;
-    // Additional properties.
-    [key: string]: string;
   };
 }
 

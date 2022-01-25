@@ -26,11 +26,8 @@ const styles = StyleSheet.create({
     minHeight: 24,
   },
   columnLeft: {
-    flex: 1,
-    flexDirection: "column",
     justifyContent: "flex-start",
 
-    flexGrow: 1,
     marginBottom: 10,
     minHeight: 24,
   },
@@ -78,10 +75,7 @@ const CommitDisplayView = function () {
 
   const [repoDesc, setRepoDesc] = React.useState('No repo selected');
 
-  const [commitMessages, setCommitMessages] = React.useState<Record<
-    keyof any,
-    String
-  > | null>(null);
+  const [commits, setCommits] = React.useState<Array<GithubRepoCommit>>([]);
 
   const onClickFetch = async function () {
     const repoData: GithubRepoData = await getRepoData(inputUser, inputRepo);
@@ -90,27 +84,19 @@ const CommitDisplayView = function () {
       inputRepo
     );
 
-    const commitMessages: Record<keyof any, String> = {};
-    const commitCount = Math.min(COMMIT_COUNT, commitData.length);
-    for (var i = 0; i < commitCount; i++) {
-      var commit:GithubRepoCommit = commitData[i];
-      commitMessages[commit.sha.substring(0, HASH_LENGTH)] = commit.commit.message;
-    }
+    setCommits(commitData.slice(0, COMMIT_COUNT));
 
     if (repoData.description != null) {
       setRepoDesc(repoData.full_name + " : " + repoData.description);
     } else {
       setRepoDesc(repoData.full_name);
     }
-
-    setCommitMessages(commitMessages);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.rowFull}>
         <Text>Github Commits</Text>
-
       </View>
       <View style={styles.rowFull}>
         <Text>Username</Text>
@@ -119,7 +105,6 @@ const CommitDisplayView = function () {
           onChangeText={(text) => onChangeInputUser(text)}
           value={inputUser}
         />
-
       </View>
       <View style={styles.rowFull}>
         <Text>Repository</Text>
@@ -132,26 +117,24 @@ const CommitDisplayView = function () {
       <View style={styles.rowCenter}>
         <Button title="Fetch" onPress={onClickFetch} />
       </View>
-      {commitMessages == null ? null : (
-        <View style={styles.containerCommit}>
+      <View style={styles.containerCommit}>
           <View style={styles.rowCenter}>
             <Text>{repoDesc}</Text>
           </View>
           <View style={styles.rowCenter}>
             <Text>Commit Messages</Text>
           </View>
-          {Object.entries(commitMessages).map(([hash, message]) => (
+          {commits.map(({sha, commit: {author: {date}, message}}) => (
             <View style={styles.columnLeft}>
-              <Text>{hash}</Text>
+              <Text>{sha.substring(0, HASH_LENGTH)} : {date}</Text>
               {
                 // Correctly display commit messages with multiple lines.
-                message.split("\n").filter((line) => line.length > 0)
-                  .map((line) => (<Text>{line}</Text>))
+                message.split("\n").filter(line => line.length > 0)
+                  .map(line => <Text>{line}</Text>)
               }
             </View>
           ))}
         </View>
-      )}
     </View>
   );
 };

@@ -37,12 +37,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   columnLeft: {
-    justifyContent: "flex-start",
   },
   rowCenter: {
     justifyContent: "center",
     textAlign: "center",
     alignItems: "center",
+  },
+
+  commitList: {
+    flexGrow: 1,
   },
 
   textField: {
@@ -108,28 +111,31 @@ const CommitDisplayView = function () {
       <Text style={[styles.padBottom, styles.rowCenter]}>Commit Messages</Text>
       <FlatList
         data={commits}
+        style={[styles.padBottom, styles.commitList]}
         keyExtractor={(item) => item.sha.substring(0, HASH_LENGTH)}
-        renderItem={({ item: {
-          sha,
-          commit: {
-            author: { date },
-            message,
+        renderItem={({
+          item: {
+            sha,
+            commit: {
+              author: { date },
+              message,
+            },
           },
-        }}) => (
+        }) => (
           <View key={sha} style={[styles.padBottom, styles.columnLeft]}>
-          <Text>
-            {sha.substring(0, HASH_LENGTH)} : {date}
-          </Text>
-          {
-            // Correctly display commit messages with multiple lines.
-            message
-              .split("\n")
-              .filter((line) => line.length > 0)
-              .map((line) => (
-                <Text key={line}>{line}</Text>
-              ))
-          }
-        </View>
+            <Text>
+              {sha.substring(0, HASH_LENGTH)} : {date}
+            </Text>
+            {
+              // Correctly display commit messages with multiple lines.
+              message
+                .split("\n")
+                .filter((line) => line.length > 0)
+                .map((line) => (
+                  <Text key={line}>{line}</Text>
+                ))
+            }
+          </View>
         )}
       />
     </SafeAreaView>

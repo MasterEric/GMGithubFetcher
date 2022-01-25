@@ -2,8 +2,6 @@ import React from "react";
 import {
   FlatList,
   SafeAreaView,
-  ScrollView,
-  SectionList,
   StatusBar,
   StyleSheet,
   Text,
@@ -17,12 +15,12 @@ import {
   getRepoCommits,
   getRepoData,
   HASH_LENGTH,
-} from "../api/GithubAPI";
+} from "../services/GithubAPI";
 import {
   GithubRepoData,
   GithubRepoCommitData,
   GithubRepoCommit,
-} from "../api/Types";
+} from "../Types";
 
 const styles = StyleSheet.create({
   padBottom: {
@@ -85,9 +83,7 @@ const CommitDisplayView = function () {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar animated={true} backgroundColor="#333" hidden={false} />
-      <View style={[styles.padBottom]}>
-        <Text>Github Commits</Text>
-      </View>
+      <Text style={[styles.padBottom]}>Github Commits</Text>
       <View style={[styles.padBottom, styles.flexRow]}>
         <Text>Username</Text>
         <TextInput
